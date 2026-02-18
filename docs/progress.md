@@ -10,7 +10,8 @@
 | Etape 3 - Contraintes | DONE | Contraintes date/time/datetime implementees avec clamp et selectability | N/A |
 | Etape 4 - State core + reducer | DONE | Instance core createDateTimePicker avec actions et modes controlled/uncontrolled | N/A |
 | Etape 5 - Selectors | DONE | Selectors et metas jour/heure/datetime implementes avec today injectable | N/A |
-| Etape 6 - Prop getters headless | TODO | Non commencee | N/A |
+| Etape 6 - Prop getters headless | DONE | Prop-getters headless calendar/boutons/inputs implementes sans DOM | N/A |
+| Etape 7 - Documentation + example minimal | TODO | Non commencee | N/A |
 
 ## Journal
 
@@ -175,3 +176,26 @@
   - `nowDate` injectable ajoute dans options pour calcul deterministic de `isToday`
   - `getCalendarGrid` instance retourne des `CalendarCellMeta` (niveau selector)
   - Meta date/time rendues coherentes avec min/max datetime (bornes par jour/heure)
+
+### 2026-02-18 20:38 - Etape 6
+
+- Fichiers crees:
+  - `tests/date-time-picker-props.spec.ts`
+- Fichiers modifies:
+  - `src/date-time-picker.ts`
+  - `docs/progress.md`
+- Dependances ajoutees:
+  - Aucune
+- Scripts ajoutes:
+  - Aucun
+- Tests ajoutes:
+  - `tests/date-time-picker-props.spec.ts` (4 tests sur prop-getters + handlers)
+- Verification:
+  - `pnpm lint`: OK
+  - `pnpm test`: OK (48 tests passes)
+  - `pnpm build`: OK
+- Decisions:
+  - Handlers exposes en primitives headless (`onPress`, `onKeyDown(key)`)
+    sans dependance DOM
+  - Inputs headless (`date`, `time`, `datetime`) appliquent parse strict puis
+    action associee

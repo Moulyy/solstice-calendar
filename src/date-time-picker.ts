@@ -17,7 +17,13 @@ import type {
   LocalDateTime,
   LocalTime
 } from "@/date-time"
-import { combineLocalDateTime, splitLocalDateTime } from "@/date-time"
+import {
+  combineLocalDateTime,
+  parseCalendarDate,
+  parseLocalDateTime,
+  parseLocalTime,
+  splitLocalDateTime
+} from "@/date-time"
 
 /** Supported focus movement commands for the date grid. */
 export type FocusMoveDirection =
@@ -87,6 +93,35 @@ export interface DateTimeMeta {
   isDisabledDateTime: boolean
 }
 
+/** Callback signature used by headless prop-getters. */
+export type HeadlessHandler = () => void
+
+/** Headless button props for month navigation and similar actions. */
+export interface HeadlessButtonProps {
+  disabled?: boolean
+  onPress: HeadlessHandler
+  "aria-label"?: string
+}
+
+/** Headless day props used by consumer-rendered calendar cells. */
+export interface HeadlessDayProps {
+  date: CalendarDate
+  disabled?: boolean
+  tabIndex: number
+  "aria-selected": boolean
+  "aria-disabled": boolean
+  onPress: HeadlessHandler
+  onKeyDown?: (key: string) => void
+}
+
+/** Headless input props used by consumer-rendered text fields. */
+export interface HeadlessInputProps {
+  value: string
+  onChange: (next: string) => void
+  onBlur?: HeadlessHandler
+  "aria-invalid"?: boolean
+}
+
 /** Public actions exposed by the DateTimePicker core instance. */
 export interface DateTimePickerInstance {
   getState(): DateTimePickerState
@@ -94,6 +129,12 @@ export interface DateTimePickerInstance {
   getDayMeta(date: CalendarDate): DayMeta
   getTimeMeta(time: LocalTime): TimeMeta
   getDateTimeMeta(dateTime: LocalDateTime): DateTimeMeta
+  getPrevMonthButtonProps(): HeadlessButtonProps
+  getNextMonthButtonProps(): HeadlessButtonProps
+  getDayProps(date: CalendarDate): HeadlessDayProps
+  getDateInputProps(): HeadlessInputProps
+  getTimeInputProps(): HeadlessInputProps
+  getDateTimeInputProps(): HeadlessInputProps
   setValue(next: LocalDateTime | null): void
   setDate(next: CalendarDate | null): void
   setTime(next: LocalTime | null): void
@@ -106,6 +147,18 @@ export interface DateTimePickerInstance {
 
 const DEFAULT_VISIBLE_MONTH = "1970-01-01" as CalendarDate
 const DEFAULT_TIME = "00:00" as LocalTime
+
+/** Maps keyboard key names to focus movement directions. */
+const keyToDirection: Record<string, FocusMoveDirection | undefined> = {
+  ArrowLeft: "left",
+  ArrowRight: "right",
+  ArrowUp: "up",
+  ArrowDown: "down",
+  Home: "home",
+  End: "end",
+  PageUp: "pageUp",
+  PageDown: "pageDown"
+}
 
 /** Returns the date portion from a datetime value. */
 const getDateFromDateTime = (dateTime: LocalDateTime): CalendarDate => {
@@ -368,6 +421,126 @@ export const createDateTimePicker = (
     options.onTimeChange?.(normalized)
   }
 
+  /** Internal setValue action shared by instance methods and prop-getters. */
+  const setValueInternal = (next: LocalDateTime | null): void => {
+    applyValue(next)
+
+    const value = getCurrentValue()
+    if (value !== null) {
+      applyTime(getTimeFromDateTime(value))
+    }
+  }
+
+  /** Internal setDate action shared by instance methods and prop-getters. */
+  const setDateInternal = (next: CalendarDate | null): void => {
+    if (next === null) {
+      applyValue(null)
+      return
+    }
+
+    const currentValue = getCurrentValue()
+    const preservedTime = currentValue
+      ? getTimeFromDateTime(currentValue)
+      : getCurrentTime() ?? DEFAULT_TIME
+
+    applyValue(combineLocalDateTime(next, preservedTime))
+  }
+
+  /** Internal setTime action shared by instance methods and prop-getters. */
+  const setTimeInternal = (next: LocalTime | null): void => {
+    applyTime(next)
+
+    const currentValue = getCurrentValue()
+    if (currentValue === null) {
+      return
+    }
+
+    if (next === null) {
+      applyValue(null)
+      return
+    }
+
+    const normalizedTime = normalizeTimeCandidate(next, constraints)
+    if (normalizedTime === undefined || normalizedTime === null) {
+      return
+    }
+
+    applyValue(
+      combineLocalDateTime(
+        getDateFromDateTime(currentValue),
+        normalizedTime
+      )
+    )
+  }
+
+  /** Internal visible month setter shared by actions and prop-getters. */
+  const setVisibleMonthInternal = (next: CalendarDate): void => {
+    if (!isVisibleMonthControlled) {
+      uncontrolledVisibleMonth = next
+    }
+
+    options.onVisibleMonthChange?.(next)
+  }
+
+  /** Internal month navigation helper for next month. */
+  const goToNextMonthInternal = (): void => {
+    const next = addMonths(getCurrentVisibleMonth(), 1)
+    setVisibleMonthInternal(next)
+  }
+
+  /** Internal month navigation helper for previous month. */
+  const goToPrevMonthInternal = (): void => {
+    const prev = addMonths(getCurrentVisibleMonth(), -1)
+    setVisibleMonthInternal(prev)
+  }
+
+  /** Internal focus movement action shared by actions and day keyboard handlers. */
+  const moveFocusDateInternal = (direction: FocusMoveDirection): void => {
+    const currentValue = getCurrentValue()
+    const fallbackDate =
+      focusedDate ??
+      (currentValue ? getDateFromDateTime(currentValue) : null) ??
+      getCurrentVisibleMonth()
+    const anchorDate = fallbackDate
+
+    if (direction === "left") {
+      focusedDate = addDays(anchorDate, -1)
+      return
+    }
+
+    if (direction === "right") {
+      focusedDate = addDays(anchorDate, 1)
+      return
+    }
+
+    if (direction === "up") {
+      focusedDate = addDays(anchorDate, -7)
+      return
+    }
+
+    if (direction === "down") {
+      focusedDate = addDays(anchorDate, 7)
+      return
+    }
+
+    if (direction === "home") {
+      focusedDate = startOfWeek(anchorDate, weekStartsOn)
+      return
+    }
+
+    if (direction === "end") {
+      focusedDate = addDays(startOfWeek(anchorDate, weekStartsOn), 6)
+      return
+    }
+
+    if (direction === "pageUp") {
+      focusedDate = addMonths(anchorDate, -1)
+      return
+    }
+
+    focusedDate = addMonths(anchorDate, 1)
+  }
+
   return {
     getState: () => readState(),
 
@@ -394,129 +567,108 @@ export const createDateTimePicker = (
 
     getDateTimeMeta: (dateTime) => getDateTimeMetaInternal(dateTime),
 
-    setValue: (next) => {
-      applyValue(next)
+    getPrevMonthButtonProps: () => ({
+      "aria-label": "Previous month",
+      onPress: () => goToPrevMonthInternal()
+    }),
 
-      const value = getCurrentValue()
-      if (value !== null) {
-        applyTime(getTimeFromDateTime(value))
+    getNextMonthButtonProps: () => ({
+      "aria-label": "Next month",
+      onPress: () => goToNextMonthInternal()
+    }),
+
+    getDayProps: (date) => {
+      const dayMeta = getDayMetaInternal(date)
+      const tabIndex = focusedDate === date || dayMeta.isSelectedDate ? 0 : -1
+
+      return {
+        date,
+        disabled: dayMeta.isDisabledDate,
+        tabIndex,
+        "aria-selected": dayMeta.isSelectedDate,
+        "aria-disabled": dayMeta.isDisabledDate,
+        onPress: () => {
+          focusedDate = date
+          if (!dayMeta.isDisabledDate) {
+            setDateInternal(date)
+          }
+        },
+        onKeyDown: (key) => {
+          focusedDate = date
+          const direction = keyToDirection[key]
+
+          if (direction) {
+            moveFocusDateInternal(direction)
+            return
+          }
+
+          if (key === "Enter" || key === " ") {
+            if (!dayMeta.isDisabledDate) {
+              setDateInternal(date)
+            }
+          }
+        }
       }
     },
 
-    setDate: (next) => {
-      if (next === null) {
-        applyValue(null)
-        return
+    getDateInputProps: () => {
+      const state = readState()
+
+      return {
+        value: state.selectedDate ?? "",
+        onChange: (next) => {
+          const parsed = parseCalendarDate(next)
+          if (parsed) {
+            setDateInternal(parsed)
+          }
+        }
       }
-
-      const currentValue = getCurrentValue()
-      const preservedTime = currentValue
-        ? getTimeFromDateTime(currentValue)
-        : getCurrentTime() ?? DEFAULT_TIME
-
-      applyValue(combineLocalDateTime(next, preservedTime))
     },
 
-    setTime: (next) => {
-      applyTime(next)
+    getTimeInputProps: () => {
+      const state = readState()
 
-      const currentValue = getCurrentValue()
-      if (currentValue === null) {
-        return
+      return {
+        value: state.selectedTime ?? "",
+        onChange: (next) => {
+          const parsed = parseLocalTime(next)
+          if (parsed) {
+            setTimeInternal(parsed)
+          }
+        }
       }
-
-      if (next === null) {
-        applyValue(null)
-        return
-      }
-
-      const normalizedTime = normalizeTimeCandidate(next, constraints)
-      if (normalizedTime === undefined || normalizedTime === null) {
-        return
-      }
-
-      applyValue(
-        combineLocalDateTime(
-          getDateFromDateTime(currentValue),
-          normalizedTime
-        )
-      )
     },
 
-    setVisibleMonth: (next) => {
-      if (!isVisibleMonthControlled) {
-        uncontrolledVisibleMonth = next
-      }
+    getDateTimeInputProps: () => {
+      const state = readState()
 
-      options.onVisibleMonthChange?.(next)
+      return {
+        value: state.value ?? "",
+        onChange: (next) => {
+          const parsed = parseLocalDateTime(next)
+          if (parsed) {
+            setValueInternal(parsed)
+          }
+        }
+      }
     },
 
-    goToNextMonth: () => {
-      const next = addMonths(getCurrentVisibleMonth(), 1)
-      if (!isVisibleMonthControlled) {
-        uncontrolledVisibleMonth = next
-      }
+    setValue: (next) => setValueInternal(next),
 
-      options.onVisibleMonthChange?.(next)
-    },
+    setDate: (next) => setDateInternal(next),
 
-    goToPrevMonth: () => {
-      const prev = addMonths(getCurrentVisibleMonth(), -1)
-      if (!isVisibleMonthControlled) {
-        uncontrolledVisibleMonth = prev
-      }
+    setTime: (next) => setTimeInternal(next),
 
-      options.onVisibleMonthChange?.(prev)
-    },
+    setVisibleMonth: (next) => setVisibleMonthInternal(next),
+
+    goToNextMonth: () => goToNextMonthInternal(),
+
+    goToPrevMonth: () => goToPrevMonthInternal(),
 
     focusDate: (date) => {
       focusedDate = date
     },
 
-    moveFocusDate: (direction) => {
-      const currentValue = getCurrentValue()
-      const fallbackDate =
-        focusedDate ??
-        (currentValue ? getDateFromDateTime(currentValue) : null) ??
-        getCurrentVisibleMonth()
-      const anchorDate = fallbackDate
-
-      if (direction === "left") {
-        focusedDate = addDays(anchorDate, -1)
-        return
-      }
-
-      if (direction === "right") {
-        focusedDate = addDays(anchorDate, 1)
-        return
-      }
-
-      if (direction === "up") {
-        focusedDate = addDays(anchorDate, -7)
-        return
-      }
-
-      if (direction === "down") {
-        focusedDate = addDays(anchorDate, 7)
-        return
-      }
-
-      if (direction === "home") {
-        focusedDate = startOfWeek(anchorDate, weekStartsOn)
-        return
-      }
-
-      if (direction === "end") {
-        focusedDate = addDays(startOfWeek(anchorDate, weekStartsOn), 6)
-        return
-      }
-
-      if (direction === "pageUp") {
-        focusedDate = addMonths(anchorDate, -1)
-        return
-      }
-
-      focusedDate = addMonths(anchorDate, 1)
-    }
+    moveFocusDate: (direction) => moveFocusDateInternal(direction)
   }
 }
