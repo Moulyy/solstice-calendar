@@ -295,6 +295,140 @@ Le fichier doit toujours contenir:
 
 ---
 
+## Étape 9 — Verrouiller l’API publique vs plan (formatter + selectability)
+### Objectif
+Aligner ce que tu promets (plan) avec ce que l’instance expose.
+- Ajouter formatter?: DateTimeFormatter dans DateTimePickerOptions.
+- Fournir un defaultFormatter (neutre) si absent.
+
+Exposer sur l’instance :
+
+- getMonthLabel()
+- getWeekdayLabels()
+- isSelectableDate(date)
+- isSelectableTime(time)
+- isSelectableDateTime(dt)
+
+Tests
+
+- getWeekdayLabels() respecte weekStartsOn.
+- getMonthLabel() retourne quelque chose de stable (via formatter stub).
+- isSelectable* reflète correctement min/max/disabled (tester 2-3 cas simples).
+
+Notes d’implémentation
+Le formatter “Intl” viendra plus tard (ou module séparé). Ici : interface + default.
+
+## Étape 10 — Inputs utilisables (vide, invalid, aria-invalid, blur)
+### Objectif
+Avoir des get*InputProps() utilisables dans une vraie UI, sans comportements frustrants.
+À implémenter
+
+Support du “vide” :
+- "" => setDate(null) / setTime(null) / setValue(null) selon le champ
+
+Gestion d’invalidité :
+- si parse* renvoie null, exposer "aria-invalid": true
+- conserver le texte tapé (sinon l’utilisateur ne peut pas corriger)
+
+Ajouter onBlur :
+
+stratégie simple : si invalide au blur, revert au dernier état valide (ou clear). Choisir 1 comportement et le documenter.
+
+Tests
+- effacer le champ date => state date null (ou value null selon ton modèle)
+- entrer 2024-1-01 (invalide strict) => aria-invalid true + texte conservé
+- blur sur input invalide => revert/clear selon stratégie
+- entrer une valeur valide => commit et aria-invalid false
+
+Décision actée — Input invalid policy
+
+- Pendant la saisie invalide: conserver temporairement le texte saisi et exposer
+  `"aria-invalid": true`.
+- Au blur si invalide: revert au dernier état valide commité (pas de clear implicite).
+- Sur saisie valide: commit immédiat et suppression de `aria-invalid`.
+
+## Étape 11 — Sync focus ↔ visibleMonth (navigation clavier)
+### Objectif
+Quand on navigue au clavier, le mois visible doit suivre le focus.
+
+Après moveFocusDate, si focusedDate sort du mois visibleMonth :
+
+- mettre à jour visibleMonth sur le mois de focusedDate (ex: YYYY-MM-01)
+- (Optionnel v0.2) décider si on autorise focus sur dates disabled ou si on “skip”.
+
+Tests
+
+- partant d’un visibleMonth, flèche droite/haut/bas qui fait sortir => visibleMonth change
+- pageUp/pageDown => visibleMonth change
+- cohérence : getCalendarGrid reflète le nouveau mois
+
+## Étape 12 — Time options (step minutes) + helpers
+### Objectif
+Permettre aux gens de construire un time picker sans réinventer la roue.
+
+Utilitaires :
+
+- getTimeOptions({ stepMinutes, start?, end?, constraints? }) => LocalTime[]
+- roundTimeToStep(time, stepMinutes, mode?: "floor"|"ceil"|"nearest")
+
+Prop-getter simple (au choix) :
+
+- getTimeOptionProps(time) avec onPress => setTime(time) + aria-selected + aria-disabled
+
+Tests
+- liste attendue (00:00, 00:15, …)
+- respecte minTime/maxTime
+- respecte isTimeDisabled
+- option props : disabled true empêche setTime (ou n’appelle pas)
+
+## Étape 13 — Clamp policy DateTime avancée
+### Objectif
+
+Clarifier et fiabiliser les comportements min/max DateTime.
+
+Si setDate conserve time mais viole min/max :
+- clamp automatique
+
+Si setTime viole min/max :
+- clamp automatique
+
+Documenter stratégie
+
+Tests
+- min/max sur même jour
+- setTime avant min → clamp
+- setTime après max → clamp
+- setDate ajuste time si hors fenêtre
+
+## Étape 14 — Exemple vanilla réellement exécutable
+### Objectif
+Permettre à quelqu’un de faire tourner l’exemple facilement.
+
+Ajouter script pnpm :
+
+ex: "example:vanilla"
+
+Documenter dans README comment lancer
+
+Tests
+- Aucun test requis
+- Ne rien casser
+
+## Étape 15 — Publish readiness audit
+### Objectif
+Préparer v0.2 propre.
+
+- Vérifier exports publics
+- sideEffects correct
+
+README minimal complet :
+- Installation
+- Exemple rapide
+
+Controlled vs uncontrolled
+- Valeurs publiques
+
+
 # API cible (v1)
 
 Objectif : fournir une instance composable (style TanStack) exposant état, actions, selectors et prop-getters.

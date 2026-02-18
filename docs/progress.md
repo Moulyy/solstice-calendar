@@ -14,7 +14,8 @@
 | Etape 7 - Documentation + example minimal | DONE | Exemple vanilla ajoute et README mis a jour avec usages controlled/uncontrolled | N/A |
 | Etape 8 - Packaging & publish readiness | DONE | Build tsup ESM + types, exports package et sideEffects configures | N/A |
 | Etape 9 - Verrouiller l'API publique vs plan | DONE | Formatter injectable + labels + isSelectable* exposes sur l'instance | N/A |
-| Etape 10 - Inputs utilisables | TODO | Non commencee | N/A |
+| Etape 10 - Inputs utilisables | DONE | Inputs gerent vide/invalid/blur avec aria-invalid et draft text | N/A |
+| Etape 11 - Sync focus ↔ visibleMonth | TODO | Non commencee | N/A |
 
 ## Journal
 
@@ -273,3 +274,29 @@
   - API instance alignee sur le plan:
     `getMonthLabel`, `getWeekdayLabels`, `isSelectableDate`,
     `isSelectableTime`, `isSelectableDateTime`
+
+### 2026-02-18 21:34 - Etape 10
+
+- Fichiers crees:
+  - `tests/date-time-picker-inputs.spec.ts`
+- Fichiers modifies:
+  - `src/date-time-picker.ts`
+  - `tests/date-time-picker-api-lock.spec.ts`
+  - `docs/plan.md`
+  - `docs/progress.md`
+- Dependances ajoutees:
+  - Aucune
+- Scripts ajoutes:
+  - Aucun
+- Tests ajoutes:
+  - `tests/date-time-picker-inputs.spec.ts` (4 tests vide/invalid/blur/commit)
+  - `tests/date-time-picker-api-lock.spec.ts` enrichi (formatter parse/format sur inputs)
+- Verification:
+  - `pnpm lint`: OK
+  - `pnpm test`: OK (56 tests passes)
+  - `pnpm build`: OK
+- Decisions:
+  - Input invalid policy documentee dans `docs/plan.md`:
+    conserve temporairement la saisie invalide + `aria-invalid: true`,
+    puis revert au dernier etat valide au blur
+  - Champ vide applique bien `setDate(null)` / `setTime(null)` / `setValue(null)`

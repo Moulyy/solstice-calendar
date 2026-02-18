@@ -135,6 +135,12 @@ export interface HeadlessInputProps {
   "aria-invalid"?: boolean
 }
 
+/** Draft state used to keep temporary input text before commit. */
+type InputDraftState = {
+  value: string
+  isInvalid: boolean
+}
+
 /** Public actions exposed by the DateTimePicker core instance. */
 export interface DateTimePickerInstance {
   getState(): DateTimePickerState
@@ -285,6 +291,9 @@ export const createDateTimePicker = (
 
   let focusedDate: CalendarDate | null =
     uncontrolledValue ? getDateFromDateTime(uncontrolledValue) : null
+  let dateInputDraft: InputDraftState | null = null
+  let timeInputDraft: InputDraftState | null = null
+  let dateTimeInputDraft: InputDraftState | null = null
 
   /** Returns the active datetime value according to controlled/uncontrolled mode. */
   const getCurrentValue = (): LocalDateTime | null => {
@@ -684,15 +693,42 @@ export const createDateTimePicker = (
       const value = state.selectedDate
         ? formatter.formatDate(state.selectedDate)
         : ""
-
-      return {
-        value,
+      const draft = dateInputDraft
+      const baseProps: HeadlessInputProps = {
+        value: draft ? draft.value : value,
         onChange: (next) => {
+          if (next === "") {
+            dateInputDraft = null
+            setDateInternal(null)
+            return
+          }
+
           const parsed = formatter.parseDate(next)
           if (parsed) {
+            dateInputDraft = null
             setDateInternal(parsed)
+            return
+          }
+
+          dateInputDraft = {
+            value: next,
+            isInvalid: true
+          }
+        },
+        onBlur: () => {
+          if (dateInputDraft?.isInvalid) {
+            dateInputDraft = null
           }
         }
+      }
+
+      if (!draft?.isInvalid) {
+        return baseProps
+      }
+
+      return {
+        ...baseProps,
+        "aria-invalid": true
       }
     },
 
@@ -701,15 +737,42 @@ export const createDateTimePicker = (
       const value = state.selectedTime
         ? formatter.formatTime(state.selectedTime)
         : ""
-
-      return {
-        value,
+      const draft = timeInputDraft
+      const baseProps: HeadlessInputProps = {
+        value: draft ? draft.value : value,
         onChange: (next) => {
+          if (next === "") {
+            timeInputDraft = null
+            setTimeInternal(null)
+            return
+          }
+
           const parsed = formatter.parseTime(next)
           if (parsed) {
+            timeInputDraft = null
             setTimeInternal(parsed)
+            return
+          }
+
+          timeInputDraft = {
+            value: next,
+            isInvalid: true
+          }
+        },
+        onBlur: () => {
+          if (timeInputDraft?.isInvalid) {
+            timeInputDraft = null
           }
         }
+      }
+
+      if (!draft?.isInvalid) {
+        return baseProps
+      }
+
+      return {
+        ...baseProps,
+        "aria-invalid": true
       }
     },
 
@@ -718,15 +781,42 @@ export const createDateTimePicker = (
       const value = state.value
         ? formatter.formatDateTime(state.value)
         : ""
-
-      return {
-        value,
+      const draft = dateTimeInputDraft
+      const baseProps: HeadlessInputProps = {
+        value: draft ? draft.value : value,
         onChange: (next) => {
+          if (next === "") {
+            dateTimeInputDraft = null
+            setValueInternal(null)
+            return
+          }
+
           const parsed = formatter.parseDateTime(next)
           if (parsed) {
+            dateTimeInputDraft = null
             setValueInternal(parsed)
+            return
+          }
+
+          dateTimeInputDraft = {
+            value: next,
+            isInvalid: true
+          }
+        },
+        onBlur: () => {
+          if (dateTimeInputDraft?.isInvalid) {
+            dateTimeInputDraft = null
           }
         }
+      }
+
+      if (!draft?.isInvalid) {
+        return baseProps
+      }
+
+      return {
+        ...baseProps,
+        "aria-invalid": true
       }
     },
 
