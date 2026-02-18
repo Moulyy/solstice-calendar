@@ -31,21 +31,32 @@ const render = () => {
 
   for (const cell of picker.getCalendarGrid()) {
     const dayProps = picker.getDayProps(cell.date)
+    const isInteractive = !dayProps.disabled && cell.isCurrentMonth
     const button = document.createElement("button")
 
     button.type = "button"
     button.textContent = cell.date.slice(8)
-    button.disabled = Boolean(dayProps.disabled)
+    button.disabled = !isInteractive
     button.dataset.selected = String(dayProps["aria-selected"])
     button.dataset.today = String(cell.isToday)
-    button.tabIndex = dayProps.tabIndex
+    button.dataset.currentMonth = String(cell.isCurrentMonth)
+    button.dataset.disabled = String(!isInteractive)
+    button.tabIndex = isInteractive ? dayProps.tabIndex : -1
 
     button.addEventListener("click", () => {
+      if (!isInteractive) {
+        return
+      }
+
       dayProps.onPress()
       render()
     })
 
     button.addEventListener("keydown", (event) => {
+      if (!isInteractive) {
+        return
+      }
+
       dayProps.onKeyDown?.(event.key)
       render()
     })
