@@ -8,9 +8,9 @@ import {
   type Constraints,
   clampDateTimeToConstraints,
   clampTimeToConstraints,
-  isSelectableDate,
-  isSelectableDateTime,
-  isSelectableTime
+  isSelectableDate as isSelectableDateByConstraints,
+  isSelectableDateTime as isSelectableDateTimeByConstraints,
+  isSelectableTime as isSelectableTimeByConstraints
 } from "@/constraints"
 import type {
   CalendarDate,
@@ -36,6 +36,18 @@ export type FocusMoveDirection =
   | "pageUp"
   | "pageDown"
 
+/** Formatter contract used to parse, format and label date/time values. */
+export interface DateTimeFormatter {
+  formatDate(date: CalendarDate): string
+  parseDate(input: string): CalendarDate | null
+  formatTime(time: LocalTime): string
+  parseTime(input: string): LocalTime | null
+  formatDateTime(dateTime: LocalDateTime): string
+  parseDateTime(input: string): LocalDateTime | null
+  getMonthLabel(visibleMonth: CalendarDate): string
+  getWeekdayLabels(weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6): string[]
+}
+
 /** Public options for the DateTimePicker core instance. */
 export interface DateTimePickerOptions {
   value?: LocalDateTime | null
@@ -51,6 +63,7 @@ export interface DateTimePickerOptions {
   onTimeChange?: (next: LocalTime | null) => void
 
   weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6
+  formatter?: DateTimeFormatter
   constraints?: Constraints
   nowDate?: CalendarDate
 }
@@ -126,9 +139,14 @@ export interface HeadlessInputProps {
 export interface DateTimePickerInstance {
   getState(): DateTimePickerState
   getCalendarGrid(): CalendarCellMeta[]
+  getMonthLabel(): string
+  getWeekdayLabels(): string[]
   getDayMeta(date: CalendarDate): DayMeta
   getTimeMeta(time: LocalTime): TimeMeta
   getDateTimeMeta(dateTime: LocalDateTime): DateTimeMeta
+  isSelectableDate(date: CalendarDate): boolean
+  isSelectableTime(time: LocalTime): boolean
+  isSelectableDateTime(dateTime: LocalDateTime): boolean
   getPrevMonthButtonProps(): HeadlessButtonProps
   getNextMonthButtonProps(): HeadlessButtonProps
   getDayProps(date: CalendarDate): HeadlessDayProps
@@ -160,6 +178,26 @@ const keyToDirection: Record<string, FocusMoveDirection | undefined> = {
   PageDown: "pageDown"
 }
 
+/**
+ * Default formatter used when no custom formatter is provided.
+ * It keeps parsing/formatting strict and deterministic without locale dependencies.
+ */
+const defaultFormatter: DateTimeFormatter = {
+  formatDate: (date) => date,
+  parseDate: (input) => parseCalendarDate(input),
+  formatTime: (time) => time,
+  parseTime: (input) => parseLocalTime(input),
+  formatDateTime: (dateTime) => dateTime,
+  parseDateTime: (input) => parseLocalDateTime(input),
+  getMonthLabel: (visibleMonth) => visibleMonth.slice(0, 7),
+  getWeekdayLabels: (weekStartsOn) => {
+    const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    return weekdays
+      .slice(weekStartsOn)
+      .concat(weekdays.slice(0, weekStartsOn))
+  }
+}
+
 /** Returns the date portion from a datetime value. */
 const getDateFromDateTime = (dateTime: LocalDateTime): CalendarDate => {
   return splitLocalDateTime(dateTime).date
@@ -183,7 +221,7 @@ const normalizeDateTimeCandidate = (
   }
 
   const clamped = clampDateTimeToConstraints(next, constraints)
-  if (!isSelectableDateTime(clamped, constraints)) {
+  if (!isSelectableDateTimeByConstraints(clamped, constraints)) {
     return undefined
   }
 
@@ -203,7 +241,7 @@ const normalizeTimeCandidate = (
   }
 
   const clamped = clampTimeToConstraints(next, constraints.time)
-  if (!isSelectableTime(clamped, constraints)) {
+  if (!isSelectableTimeByConstraints(clamped, constraints)) {
     return undefined
   }
 
@@ -216,6 +254,7 @@ export const createDateTimePicker = (
 ): DateTimePickerInstance => {
   const weekStartsOn = options.weekStartsOn ?? 0
   const constraints = options.constraints ?? {}
+  const formatter = options.formatter ?? defaultFormatter
 
   const isValueControlled = options.value !== undefined
   const isVisibleMonthControlled = options.visibleMonth !== undefined
@@ -349,8 +388,7 @@ export const createDateTimePicker = (
 
     return {
       isSelectedDate: selectedDate === date,
-      isDisabledDate:
-        !isSelectableDate(date, constraints) || isDateDisabledByDateTimeBounds(date),
+      isDisabledDate: !isSelectableDateInternal(date),
       isToday: today === date,
       isCurrentMonth: currentMonthKey === dayMonthKey
     }
@@ -363,8 +401,7 @@ export const createDateTimePicker = (
 
     return {
       isSelectedTime: selectedTime === time,
-      isDisabledTime:
-        !isSelectableTime(time, constraints) || isTimeDisabledByDateTimeBounds(time)
+      isDisabledTime: !isSelectableTimeInternal(time)
     }
   }
 
@@ -374,8 +411,29 @@ export const createDateTimePicker = (
 
     return {
       isSelectedDateTime: currentValue === dateTime,
-      isDisabledDateTime: !isSelectableDateTime(dateTime, constraints)
+      isDisabledDateTime: !isSelectableDateTimeByConstraints(dateTime, constraints)
     }
+  }
+
+  /** Returns selectability for a date using all applicable date-related constraints. */
+  const isSelectableDateInternal = (date: CalendarDate): boolean => {
+    return (
+      isSelectableDateByConstraints(date, constraints) &&
+      !isDateDisabledByDateTimeBounds(date)
+    )
+  }
+
+  /** Returns selectability for a time using all applicable time-related constraints. */
+  const isSelectableTimeInternal = (time: LocalTime): boolean => {
+    return (
+      isSelectableTimeByConstraints(time, constraints) &&
+      !isTimeDisabledByDateTimeBounds(time)
+    )
+  }
+
+  /** Returns selectability for a datetime using all applicable datetime constraints. */
+  const isSelectableDateTimeInternal = (dateTime: LocalDateTime): boolean => {
+    return isSelectableDateTimeByConstraints(dateTime, constraints)
   }
 
   /** Computes the current state snapshot from controlled/uncontrolled values. */
@@ -561,11 +619,21 @@ export const createDateTimePicker = (
       })
     },
 
+    getMonthLabel: () => formatter.getMonthLabel(getCurrentVisibleMonth()),
+
+    getWeekdayLabels: () => formatter.getWeekdayLabels(weekStartsOn),
+
     getDayMeta: (date) => getDayMetaInternal(date),
 
     getTimeMeta: (time) => getTimeMetaInternal(time),
 
     getDateTimeMeta: (dateTime) => getDateTimeMetaInternal(dateTime),
+
+    isSelectableDate: (date) => isSelectableDateInternal(date),
+
+    isSelectableTime: (time) => isSelectableTimeInternal(time),
+
+    isSelectableDateTime: (dateTime) => isSelectableDateTimeInternal(dateTime),
 
     getPrevMonthButtonProps: () => ({
       "aria-label": "Previous month",
@@ -613,11 +681,14 @@ export const createDateTimePicker = (
 
     getDateInputProps: () => {
       const state = readState()
+      const value = state.selectedDate
+        ? formatter.formatDate(state.selectedDate)
+        : ""
 
       return {
-        value: state.selectedDate ?? "",
+        value,
         onChange: (next) => {
-          const parsed = parseCalendarDate(next)
+          const parsed = formatter.parseDate(next)
           if (parsed) {
             setDateInternal(parsed)
           }
@@ -627,11 +698,14 @@ export const createDateTimePicker = (
 
     getTimeInputProps: () => {
       const state = readState()
+      const value = state.selectedTime
+        ? formatter.formatTime(state.selectedTime)
+        : ""
 
       return {
-        value: state.selectedTime ?? "",
+        value,
         onChange: (next) => {
-          const parsed = parseLocalTime(next)
+          const parsed = formatter.parseTime(next)
           if (parsed) {
             setTimeInternal(parsed)
           }
@@ -641,11 +715,14 @@ export const createDateTimePicker = (
 
     getDateTimeInputProps: () => {
       const state = readState()
+      const value = state.value
+        ? formatter.formatDateTime(state.value)
+        : ""
 
       return {
-        value: state.value ?? "",
+        value,
         onChange: (next) => {
-          const parsed = parseLocalDateTime(next)
+          const parsed = formatter.parseDateTime(next)
           if (parsed) {
             setValueInternal(parsed)
           }
