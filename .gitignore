@@ -2,3 +2,5 @@
 /dist
 .DS_Store
 .vscode/
+private/*
+AGENTS.md
