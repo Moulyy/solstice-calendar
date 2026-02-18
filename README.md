@@ -1,59 +1,82 @@
 # solstice-calendar
-A headless, framework-agnostic date picker engine. Build fully custom calendar UIs with composable state, actions and prop getters.
 
-# Solstice Date
+Headless, framework-agnostic calendar/date-time core.
 
-Solstice Date is a headless, framework-agnostic date picker engine inspired by TanStack.
+- No DOM types in public API
+- Deterministic date/time values (`YYYY-MM-DD`, `HH:mm`, `YYYY-MM-DDTHH:mm`)
+- Controlled and uncontrolled modes
+- Calendar math, constraints, selectors, and prop-getters
 
-It provides composable state management, calendar math utilities, constraints handling, and prop getters — without any DOM, CSS, or framework dependency.
+## Vanilla Example
 
-You bring the UI. Solstice brings the logic.
+A minimal vanilla integration is available in:
 
----
+- `examples/vanilla/index.html`
+- `examples/vanilla/main.js`
 
-## ✨ Why Solstice?
+The example renders:
 
-Most date pickers are tightly coupled to a specific framework or UI implementation.
+- month navigation
+- calendar grid
+- date input
+- time input
 
-Solstice is different:
+## Uncontrolled Usage
 
-- ✅ Headless (no DOM, no styling)
-- ✅ Framework-agnostic (works with Vue, Angular, React, Svelte, or vanilla JS)
-- ✅ Fully typed (TypeScript first)
-- ✅ Controlled & uncontrolled modes
-- ✅ Deterministic calendar math
-- ✅ Timezone-safe calendar dates (`YYYY-MM-DD`)
+```ts
+import { createDateTimePicker } from "solstice-calendar"
 
-It gives you the primitives needed to build:
+const picker = createDateTimePicker({
+  defaultValue: "2024-05-15T10:30",
+  defaultVisibleMonth: "2024-05-01",
+  weekStartsOn: 1,
+  nowDate: "2024-05-15"
+})
 
-- Single date pickers
-- Range pickers
-- Inline calendars
-- Input-based pickers
-- Multi-month views
-- Design system compliant components
+picker.setDate("2024-05-20")
+picker.setTime("11:45")
 
----
+const state = picker.getState()
+// state.value === "2024-05-20T11:45"
 
-## 🧠 Core Philosophy
+const dayProps = picker.getDayProps("2024-05-21")
+const dateInputProps = picker.getDateInputProps()
+const timeInputProps = picker.getTimeInputProps()
+```
 
-Solstice separates concerns cleanly:
+## Controlled Usage
 
-- **CalendarDate** — a stable, timezone-free string representation (`YYYY-MM-DD`)
-- **State & Reducer** — predictable state transitions
-- **Selectors** — derived calendar grid & metadata
-- **Prop Getters** — ergonomic integration with any UI layer
+```ts
+import { createDateTimePicker } from "solstice-calendar"
 
-No assumptions about your rendering strategy.
-No styling opinions.
-No framework lock-in.
+let controlledValue: `${number}-${number}-${number}T${number}:${number}` | null =
+  "2024-06-10T08:00"
 
-📦 Use Cases
+const picker = createDateTimePicker({
+  value: controlledValue,
+  onValueChange: (next) => {
+    controlledValue = next
+  }
+})
 
-Design systems needing consistent date logic across frameworks
+picker.setDate("2024-06-12")
+// onValueChange called with "2024-06-12T08:00"
+// internal value is not mutated in controlled mode
+```
 
-Teams building multi frameworks components from shared core logic
+## Inputs and Keyboard
 
-Applications requiring deterministic calendar constraints
+`getDayProps(date)` returns primitives only:
 
-Headless UI architectures
+- `onPress()`
+- `onKeyDown(key: string)`
+- `aria-selected`, `aria-disabled`, `tabIndex`
+
+`onKeyDown` supports:
+
+- `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`
+- `Home`, `End`, `PageUp`, `PageDown`
+- `Enter` / space to select
+
+`getDateInputProps()`, `getTimeInputProps()`, and `getDateTimeInputProps()`
+perform strict parsing before applying updates.

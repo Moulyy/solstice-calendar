@@ -1,11 +1,23 @@
 {
   "name": "solstice-calendar",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
   "scripts": {
     "test": "vitest run",
-    "build": "tsc --noEmit",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },
   "devDependencies": {
@@ -13,6 +25,7 @@
     "@typescript-eslint/eslint-plugin": "^8.56.0",
     "@typescript-eslint/parser": "^8.56.0",
     "eslint": "^10.0.0",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   }

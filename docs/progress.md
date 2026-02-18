@@ -11,7 +11,8 @@
 | Etape 4 - State core + reducer | DONE | Instance core createDateTimePicker avec actions et modes controlled/uncontrolled | N/A |
 | Etape 5 - Selectors | DONE | Selectors et metas jour/heure/datetime implementes avec today injectable | N/A |
 | Etape 6 - Prop getters headless | DONE | Prop-getters headless calendar/boutons/inputs implementes sans DOM | N/A |
-| Etape 7 - Documentation + example minimal | TODO | Non commencee | N/A |
+| Etape 7 - Documentation + example minimal | DONE | Exemple vanilla ajoute et README mis a jour avec usages controlled/uncontrolled | N/A |
+| Etape 8 - Packaging & publish readiness | DONE | Build tsup ESM + types, exports package et sideEffects configures | N/A |
 
 ## Journal
 
@@ -199,3 +200,50 @@
     sans dependance DOM
   - Inputs headless (`date`, `time`, `datetime`) appliquent parse strict puis
     action associee
+
+### 2026-02-18 20:39 - Etape 7
+
+- Fichiers crees:
+  - `examples/vanilla/index.html`
+  - `examples/vanilla/main.js`
+- Fichiers modifies:
+  - `README.md`
+  - `docs/progress.md`
+- Dependances ajoutees:
+  - Aucune
+- Scripts ajoutes:
+  - Aucun
+- Tests ajoutes:
+  - Aucun (non requis pour cette etape)
+- Verification:
+  - `pnpm lint`: OK
+  - `pnpm test`: OK (tests existants non casses)
+  - `pnpm build`: OK
+- Decisions:
+  - Exemple vanilla documente avec rendu calendrier + input date + input time
+  - README recentre sur usage pratique et snippets controlled/uncontrolled
+
+### 2026-02-18 20:46 - Etape 8
+
+- Fichiers crees:
+  - `tsup.config.ts`
+- Fichiers modifies:
+  - `package.json`
+  - `pnpm-lock.yaml`
+  - `docs/progress.md`
+- Dependances ajoutees:
+  - `tsup` (dev)
+- Scripts ajoutes:
+  - `pnpm typecheck` -> `tsc --noEmit`
+  - `pnpm build` -> `tsup`
+- Tests ajoutes:
+  - Aucun (non requis pour cette etape)
+- Verification:
+  - `pnpm typecheck`: OK
+  - `pnpm lint`: OK
+  - `pnpm test`: OK (48 tests passes)
+  - `pnpm build`: OK (dist ESM + d.ts generes)
+  - Import ESM verifie via `node` sur `dist/index.js`
+- Decisions:
+  - Packaging ESM-first avec exports map + types + `sideEffects: false`
+  - Dist publiee limitee au dossier `dist` via `files`
