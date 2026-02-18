@@ -2,6 +2,7 @@ import {
   addDays,
   addMonths,
   getCalendarGrid as getCalendarDateGrid,
+  getMonthStart,
   startOfWeek
 } from "@/calendar-math"
 import {
@@ -561,6 +562,21 @@ export const createDateTimePicker = (
     setVisibleMonthInternal(prev)
   }
 
+  /** Syncs visible month with focused date when focus moves outside current month. */
+  const syncVisibleMonthWithFocusedDate = (): void => {
+    if (!focusedDate) {
+      return
+    }
+
+    const currentMonthKey = getCurrentVisibleMonth().slice(0, 7)
+    const focusedMonthKey = focusedDate.slice(0, 7)
+    if (currentMonthKey === focusedMonthKey) {
+      return
+    }
+
+    setVisibleMonthInternal(getMonthStart(focusedDate))
+  }
+
   /** Internal focus movement action shared by actions and day keyboard handlers. */
   const moveFocusDateInternal = (direction: FocusMoveDirection): void => {
     const currentValue = getCurrentValue()
@@ -572,40 +588,48 @@ export const createDateTimePicker = (
 
     if (direction === "left") {
       focusedDate = addDays(anchorDate, -1)
+      syncVisibleMonthWithFocusedDate()
       return
     }
 
     if (direction === "right") {
       focusedDate = addDays(anchorDate, 1)
+      syncVisibleMonthWithFocusedDate()
       return
     }
 
     if (direction === "up") {
       focusedDate = addDays(anchorDate, -7)
+      syncVisibleMonthWithFocusedDate()
       return
     }
 
     if (direction === "down") {
       focusedDate = addDays(anchorDate, 7)
+      syncVisibleMonthWithFocusedDate()
       return
     }
 
     if (direction === "home") {
       focusedDate = startOfWeek(anchorDate, weekStartsOn)
+      syncVisibleMonthWithFocusedDate()
       return
     }
 
     if (direction === "end") {
       focusedDate = addDays(startOfWeek(anchorDate, weekStartsOn), 6)
+      syncVisibleMonthWithFocusedDate()
       return
     }
 
     if (direction === "pageUp") {
       focusedDate = addMonths(anchorDate, -1)
+      syncVisibleMonthWithFocusedDate()
       return
     }
 
     focusedDate = addMonths(anchorDate, 1)
+    syncVisibleMonthWithFocusedDate()
   }
 
   return {

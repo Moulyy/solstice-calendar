@@ -15,7 +15,8 @@
 | Etape 8 - Packaging & publish readiness | DONE | Build tsup ESM + types, exports package et sideEffects configures | N/A |
 | Etape 9 - Verrouiller l'API publique vs plan | DONE | Formatter injectable + labels + isSelectable* exposes sur l'instance | N/A |
 | Etape 10 - Inputs utilisables | DONE | Inputs gerent vide/invalid/blur avec aria-invalid et draft text | N/A |
-| Etape 11 - Sync focus ↔ visibleMonth | TODO | Non commencee | N/A |
+| Etape 11 - Sync focus ↔ visibleMonth | DONE | Navigation clavier synchronise focus et mois visible automatiquement | N/A |
+| Etape 12 - Time options + helpers | TODO | Non commencee | N/A |
 
 ## Journal
 
@@ -300,3 +301,26 @@
     conserve temporairement la saisie invalide + `aria-invalid: true`,
     puis revert au dernier etat valide au blur
   - Champ vide applique bien `setDate(null)` / `setTime(null)` / `setValue(null)`
+
+### 2026-02-18 21:38 - Etape 11
+
+- Fichiers crees:
+  - `tests/date-time-picker-focus-sync.spec.ts`
+- Fichiers modifies:
+  - `src/date-time-picker.ts`
+  - `docs/progress.md`
+- Dependances ajoutees:
+  - Aucune
+- Scripts ajoutes:
+  - Aucun
+- Tests ajoutes:
+  - `tests/date-time-picker-focus-sync.spec.ts` (4 tests sync focus/mois)
+- Verification:
+  - `pnpm lint`: OK
+  - `pnpm test`: OK (60 tests passes)
+  - `pnpm build`: OK
+- Decisions:
+  - Apres `moveFocusDate`, si le focus sort du mois visible, `visibleMonth` est
+    synchronise sur le debut du mois de `focusedDate` (`YYYY-MM-01`)
+  - En mode controlled visibleMonth, la synchro passe par le callback
+    `onVisibleMonthChange` sans mutation interne
