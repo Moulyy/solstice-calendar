@@ -1,6 +1,33 @@
 {
   "name": "solstice-calendar",
   "version": "0.1.0",
+  "description": "Headless, framework-agnostic calendar and date-time picker core",
+  "keywords": [
+    "calendar",
+    "date-time",
+    "datepicker",
+    "datetimepicker",
+    "time-picker",
+    "headless",
+    "typescript",
+    "framework-agnostic"
+  ],
+  "homepage": "https://github.com/Moulyy/solstice-calendar#readme",
+  "bugs": {
+    "url": "https://github.com/Moulyy/solstice-calendar/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Moulyy/solstice-calendar.git"
+  },
+  
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
