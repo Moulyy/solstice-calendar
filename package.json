@@ -1,6 +1,6 @@
 {
   "name": "solstice-calendar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Headless, framework-agnostic calendar and date-time picker core",
   "keywords": [
     "calendar",
@@ -20,7 +20,6 @@
     "type": "git",
     "url": "git+https://github.com/Moulyy/solstice-calendar.git"
   },
-  
   "license": "MIT",
   "engines": {
     "node": ">=18"
