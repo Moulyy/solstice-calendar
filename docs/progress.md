@@ -7,7 +7,8 @@
 | Etape 0 - Setup minimal du repo | DONE | Projet TypeScript strict initialise, Vitest configure, smoke test passant | N/A |
 | Etape 1 - Types & parsing robustes | DONE | Types publics + parsing/formatting stricts et conversions implementes | N/A |
 | Etape 2 - Maths calendrier | DONE | Fonctions de maths calendrier implementees avec grille fixe de 42 dates | N/A |
-| Etape 3 - Contraintes | TODO | Non commencee | N/A |
+| Etape 3 - Contraintes | DONE | Contraintes date/time/datetime implementees avec clamp et selectability | N/A |
+| Etape 4 - State core + reducer | TODO | Non commencee | N/A |
 
 ## Journal
 
@@ -98,3 +99,30 @@
   - Incoherence notee: Etape 2 definit `getCalendarGrid` en `CalendarDate[]`
     alors que l'API instance v1 exposera plus tard des metas; traite ici comme
     utilitaire bas niveau de dates uniquement
+
+### 2026-02-18 20:22 - Etape 3
+
+- Fichiers crees:
+  - `src/constraints.ts`
+  - `tests/constraints.spec.ts`
+- Fichiers modifies:
+  - `src/index.ts`
+  - `docs/progress.md`
+- Dependances ajoutees:
+  - Aucune
+- Scripts ajoutes:
+  - Aucun
+- Tests ajoutes:
+  - `tests/constraints.spec.ts` (8 tests sur min/max, clamp, disabled,
+    combinaison des contraintes)
+- Verification:
+  - `pnpm lint`: OK
+  - `pnpm test`: OK (34 tests passes)
+  - `pnpm build`: OK
+- Decisions:
+  - Clamp datetime applique d'abord min/max datetime puis contraintes date/time,
+    puis revalide min/max datetime
+  - `isSelectableDateTime` combine date + time + datetime et les predicates
+    disabled
+  - Incoherence plan notee: texte Etape 3 mentionne `isDateTimeDisabled`,
+    API cible utilise `dateTime.isDisabled`; implementation alignee sur API cible
