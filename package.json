@@ -18,7 +18,8 @@
     "test": "vitest run",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "example:vanilla": "pnpm build && node examples/vanilla/server.mjs"
   },
   "devDependencies": {
     "@types/node": "^25.2.3",

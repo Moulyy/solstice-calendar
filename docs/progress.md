@@ -16,7 +16,10 @@
 | Etape 9 - Verrouiller l'API publique vs plan | DONE | Formatter injectable + labels + isSelectable* exposes sur l'instance | N/A |
 | Etape 10 - Inputs utilisables | DONE | Inputs gerent vide/invalid/blur avec aria-invalid et draft text | N/A |
 | Etape 11 - Sync focus ↔ visibleMonth | DONE | Navigation clavier synchronise focus et mois visible automatiquement | N/A |
-| Etape 12 - Time options + helpers | TODO | Non commencee | N/A |
+| Etape 12 - Time options + helpers | DONE | Time options/rounding ajoutes + getTimeOptionProps headless | N/A |
+| Etape 13 - Clamp policy DateTime avancee | DONE | Politique de clamp DateTime documentee et verifiee par tests dedies | N/A |
+| Etape 14 - Exemple vanilla executable | DONE | Script de lancement vanilla ajoute et README complete | N/A |
+| Etape 15 - Publish readiness audit | DONE | Audit exports/sideEffects + README minimal + verification pack | N/A |
 
 ## Journal
 
@@ -324,3 +327,96 @@
     synchronise sur le debut du mois de `focusedDate` (`YYYY-MM-01`)
   - En mode controlled visibleMonth, la synchro passe par le callback
     `onVisibleMonthChange` sans mutation interne
+
+### 2026-02-18 21:43 - Etape 12
+
+- Fichiers crees:
+  - `src/time-options.ts`
+  - `tests/time-options.spec.ts`
+- Fichiers modifies:
+  - `src/date-time-picker.ts`
+  - `src/index.ts`
+  - `docs/progress.md`
+- Dependances ajoutees:
+  - Aucune
+- Scripts ajoutes:
+  - Aucun
+- Tests ajoutes:
+  - `tests/time-options.spec.ts` (5 tests options/rounding/time option props)
+- Verification:
+  - `pnpm lint`: OK
+  - `pnpm test`: OK (65 tests passes)
+  - `pnpm build`: OK
+- Decisions:
+  - `getTimeOptions` respecte `stepMinutes`, bornes start/end, min/max et
+    `isTimeDisabled`
+  - `getTimeOptionProps(time)` expose `aria-selected`/`aria-disabled` et bloque
+    `setTime` quand disabled
+
+### 2026-02-18 21:44 - Etape 13
+
+- Fichiers crees:
+  - `tests/date-time-picker-clamp-policy.spec.ts`
+- Fichiers modifies:
+  - `docs/plan.md`
+  - `docs/progress.md`
+- Dependances ajoutees:
+  - Aucune
+- Scripts ajoutes:
+  - Aucun
+- Tests ajoutes:
+  - `tests/date-time-picker-clamp-policy.spec.ts` (2 tests clamp setDate/setTime)
+- Verification:
+  - `pnpm lint`: OK
+  - `pnpm test`: OK (67 tests passes)
+  - `pnpm build`: OK
+- Decisions:
+  - Strategie documentee: setDate/setTime preservent d'abord la contrepartie
+    puis appliquent un clamp datetime inclusif centralise
+
+### 2026-02-18 21:45 - Etape 14
+
+- Fichiers crees:
+  - `examples/vanilla/server.mjs`
+- Fichiers modifies:
+  - `package.json`
+  - `README.md`
+  - `docs/progress.md`
+- Dependances ajoutees:
+  - Aucune
+- Scripts ajoutes:
+  - `pnpm example:vanilla` -> `pnpm build && node examples/vanilla/server.mjs`
+- Tests ajoutes:
+  - Aucun (non requis pour cette etape)
+- Verification:
+  - `pnpm lint`: OK
+  - `pnpm test`: OK (67 tests passes)
+  - `pnpm build`: OK
+- Decisions:
+  - L'exemple vanilla est executable sans dependances externes additionnelles
+    via un serveur Node local
+
+### 2026-02-18 21:46 - Etape 15
+
+- Fichiers crees:
+  - `tests/public-api.spec.ts`
+- Fichiers modifies:
+  - `README.md`
+  - `docs/progress.md`
+- Dependances ajoutees:
+  - Aucune
+- Scripts ajoutes:
+  - Aucun
+- Tests ajoutes:
+  - `tests/public-api.spec.ts` (audit surface API exportee)
+- Verification:
+  - `pnpm lint`: OK
+  - `pnpm test`: OK (68 tests passes)
+  - `pnpm build`: OK
+  - `pnpm npm pack --dry-run`: OK (tarball 6 fichiers attendus)
+  - Import ESM `dist/index.js`: OK (`createDateTimePicker`, `getTimeOptions`,
+    `roundTimeToStep` presentes)
+- Decisions:
+  - `sideEffects: false` et `exports` package valides pour un usage ESM+types
+  - README complete avec sections: Installation, Quick Start, Controlled/
+    Uncontrolled, Valeurs publiques

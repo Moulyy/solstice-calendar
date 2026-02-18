@@ -400,6 +400,15 @@ Tests
 - setTime après max → clamp
 - setDate ajuste time si hors fenêtre
 
+Stratégie actée
+
+- `setDate` conserve d'abord l'heure courante puis applique un clamp datetime
+  inclusif.
+- `setTime` conserve d'abord la date courante puis applique un clamp datetime
+  inclusif.
+- Le clamp final est centralisé via la logique datetime (min/max) pour garantir
+  un comportement cohérent entre actions.
+
 ## Étape 14 — Exemple vanilla réellement exécutable
 ### Objectif
 Permettre à quelqu’un de faire tourner l’exemple facilement.

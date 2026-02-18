@@ -7,6 +7,32 @@ Headless, framework-agnostic calendar/date-time core.
 - Controlled and uncontrolled modes
 - Calendar math, constraints, selectors, and prop-getters
 
+## Installation
+
+```bash
+pnpm add solstice-calendar
+```
+
+## Quick Start
+
+```ts
+import { createDateTimePicker } from "solstice-calendar"
+
+const picker = createDateTimePicker({
+  defaultValue: "2024-05-15T10:30",
+  defaultVisibleMonth: "2024-05-01"
+})
+
+picker.setDate("2024-05-20")
+picker.setTime("11:45")
+```
+
+## Public Values
+
+- `CalendarDate`: `YYYY-MM-DD`
+- `LocalTime`: `HH:mm`
+- `LocalDateTime`: `YYYY-MM-DDTHH:mm`
+
 ## Vanilla Example
 
 A minimal vanilla integration is available in:
@@ -20,6 +46,16 @@ The example renders:
 - calendar grid
 - date input
 - time input
+
+Run it with:
+
+```bash
+pnpm example:vanilla
+```
+
+Then open:
+
+- `http://localhost:4173/examples/vanilla/`
 
 ## Uncontrolled Usage
 

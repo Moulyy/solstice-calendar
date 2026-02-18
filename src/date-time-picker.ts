@@ -136,6 +136,15 @@ export interface HeadlessInputProps {
   "aria-invalid"?: boolean
 }
 
+/** Headless props for a selectable time option item. */
+export interface HeadlessTimeOptionProps {
+  time: LocalTime
+  disabled?: boolean
+  "aria-selected": boolean
+  "aria-disabled": boolean
+  onPress: HeadlessHandler
+}
+
 /** Draft state used to keep temporary input text before commit. */
 type InputDraftState = {
   value: string
@@ -154,6 +163,7 @@ export interface DateTimePickerInstance {
   isSelectableDate(date: CalendarDate): boolean
   isSelectableTime(time: LocalTime): boolean
   isSelectableDateTime(dateTime: LocalDateTime): boolean
+  getTimeOptionProps(time: LocalTime): HeadlessTimeOptionProps
   getPrevMonthButtonProps(): HeadlessButtonProps
   getNextMonthButtonProps(): HeadlessButtonProps
   getDayProps(date: CalendarDate): HeadlessDayProps
@@ -667,6 +677,22 @@ export const createDateTimePicker = (
     isSelectableTime: (time) => isSelectableTimeInternal(time),
 
     isSelectableDateTime: (dateTime) => isSelectableDateTimeInternal(dateTime),
+
+    getTimeOptionProps: (time) => {
+      const timeMeta = getTimeMetaInternal(time)
+
+      return {
+        time,
+        disabled: timeMeta.isDisabledTime,
+        "aria-selected": timeMeta.isSelectedTime,
+        "aria-disabled": timeMeta.isDisabledTime,
+        onPress: () => {
+          if (!timeMeta.isDisabledTime) {
+            setTimeInternal(time)
+          }
+        }
+      }
+    },
 
     getPrevMonthButtonProps: () => ({
       "aria-label": "Previous month",
