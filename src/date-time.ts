@@ -5,6 +5,8 @@ export type LocalDateTime = `${number}-${number}-${number}T${number}:${number}`
 export type DateParts = { y: number; m: number; d: number }
 export type TimeParts = { h: number; min: number }
 
+import { getDaysInMonth } from "@/internal/calendar-utils"
+
 const CALENDAR_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/
 const LOCAL_TIME_RE = /^(\d{2}):(\d{2})$/
 const LOCAL_DATE_TIME_RE =
@@ -12,35 +14,6 @@ const LOCAL_DATE_TIME_RE =
 
 /** Parses a decimal string using base 10. */
 const toInt = (value: string): number => Number.parseInt(value, 10)
-
-/**
- * Returns true when the Gregorian year is leap
- * (divisible by 4 except centuries not divisible by 400).
- */
-const isLeapYear = (year: number): boolean => {
-  if (year % 400 === 0) {
-    return true
-  }
-
-  if (year % 100 === 0) {
-    return false
-  }
-
-  return year % 4 === 0
-}
-
-/** Returns the number of days for a given year/month pair (month is 1-12). */
-const getDaysInMonth = (year: number, month: number): number => {
-  if (month === 2) {
-    return isLeapYear(year) ? 29 : 28
-  }
-
-  if ([4, 6, 9, 11].includes(month)) {
-    return 30
-  }
-
-  return 31
-}
 
 /** Validates calendar date parts with explicit month/day bounds and leap-year rules. */
 const isValidDateParts = ({ y, m, d }: DateParts): boolean => {

@@ -6,7 +6,8 @@
 | --- | --- | --- | --- |
 | Etape 0 - Setup minimal du repo | DONE | Projet TypeScript strict initialise, Vitest configure, smoke test passant | N/A |
 | Etape 1 - Types & parsing robustes | DONE | Types publics + parsing/formatting stricts et conversions implementes | N/A |
-| Etape 2 - Maths calendrier | TODO | Non commencee | N/A |
+| Etape 2 - Maths calendrier | DONE | Fonctions de maths calendrier implementees avec grille fixe de 42 dates | N/A |
+| Etape 3 - Contraintes | TODO | Non commencee | N/A |
 
 ## Journal
 
@@ -70,3 +71,30 @@
     `YYYY-MM-DDTHH:mm`)
   - Validation explicite des bornes (mois/jour, leap year, heures/minutes)
   - `format*` et `from*` retournent `null` si input invalide
+
+### 2026-02-18 20:09 - Etape 2
+
+- Fichiers crees:
+  - `src/calendar-math.ts`
+  - `tests/calendar-math.spec.ts`
+- Fichiers modifies:
+  - `src/index.ts`
+  - `docs/progress.md`
+- Dependances ajoutees:
+  - Aucune
+- Scripts ajoutes:
+  - Aucun
+- Tests ajoutes:
+  - `tests/calendar-math.spec.ts` (12 tests sur bornes de mois, semaine, grille,
+    transitions et tri)
+- Verification:
+  - `pnpm lint`: OK
+  - `pnpm test`: OK (26 tests passes)
+  - `pnpm build`: OK
+- Decisions:
+  - Implementation calendar math sans dependance au timezone system
+    (algorithmes civils purs)
+  - `addMonths` applique un clamp au dernier jour valide du mois cible
+  - Incoherence notee: Etape 2 definit `getCalendarGrid` en `CalendarDate[]`
+    alors que l'API instance v1 exposera plus tard des metas; traite ici comme
+    utilitaire bas niveau de dates uniquement
