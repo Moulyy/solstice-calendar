@@ -186,6 +186,20 @@ Aucun warning TypeScript.
 
 Aucun comportement implicite non documenté.
 
+# 11. Commentaires de fonctions (JSDoc)
+
+Toutes les fonctions doivent être commentées avec un format de type JSDoc.
+
+Exigences :
+
+Les commentaires doivent être concis mais précis.
+
+Chaque commentaire doit expliquer clairement ce que fait la fonction, son comportement attendu et, si utile, ses contraintes.
+
+Les fonctions internes doivent aussi être documentées.
+
+Les fonctions exposées publiquement doivent être documentées en priorité, avec un niveau de clarté supérieur pour aider les utilisateurs de la librairie (hints d’usage, entrées/sorties, cas importants).
+
 # Workflow obligatoire
 
 À chaque exécution :
