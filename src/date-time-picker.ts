@@ -1,8 +1,14 @@
-import { addDays, addMonths, startOfWeek } from "@/calendar-math"
+import {
+  addDays,
+  addMonths,
+  getCalendarGrid as getCalendarDateGrid,
+  startOfWeek
+} from "@/calendar-math"
 import {
   type Constraints,
   clampDateTimeToConstraints,
   clampTimeToConstraints,
+  isSelectableDate,
   isSelectableDateTime,
   isSelectableTime
 } from "@/constraints"
@@ -40,6 +46,7 @@ export interface DateTimePickerOptions {
 
   weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6
   constraints?: Constraints
+  nowDate?: CalendarDate
 }
 
 /** Core state shape used by selectors and consumer integrations. */
@@ -51,9 +58,42 @@ export interface DateTimePickerState {
   focusedDate: CalendarDate | null
 }
 
+/** Day metadata returned by selector helpers for a specific date cell. */
+export interface DayMeta {
+  isSelectedDate: boolean
+  isDisabledDate: boolean
+  isToday: boolean
+  isCurrentMonth: boolean
+}
+
+/** Time metadata returned by selector helpers for a specific time value. */
+export interface TimeMeta {
+  isSelectedTime: boolean
+  isDisabledTime: boolean
+}
+
+/** Calendar cell metadata used by headless calendar rendering. */
+export interface CalendarCellMeta {
+  date: CalendarDate
+  isCurrentMonth: boolean
+  isSelected: boolean
+  isDisabled: boolean
+  isToday: boolean
+}
+
+/** DateTime metadata returned by selector helpers for a specific datetime value. */
+export interface DateTimeMeta {
+  isSelectedDateTime: boolean
+  isDisabledDateTime: boolean
+}
+
 /** Public actions exposed by the DateTimePicker core instance. */
 export interface DateTimePickerInstance {
   getState(): DateTimePickerState
+  getCalendarGrid(): CalendarCellMeta[]
+  getDayMeta(date: CalendarDate): DayMeta
+  getTimeMeta(time: LocalTime): TimeMeta
+  getDateTimeMeta(dateTime: LocalDateTime): DateTimeMeta
   setValue(next: LocalDateTime | null): void
   setDate(next: CalendarDate | null): void
   setTime(next: LocalTime | null): void
@@ -177,6 +217,129 @@ export const createDateTimePicker = (
     return uncontrolledVisibleMonth
   }
 
+  /** Returns configured "today" value for deterministic meta computation. */
+  const getToday = (): CalendarDate | null => {
+    return options.nowDate ?? null
+  }
+
+  /** Returns true when the date is outside datetime min/max date boundaries. */
+  const isDateDisabledByDateTimeBounds = (date: CalendarDate): boolean => {
+    const dateTimeConstraints = constraints.dateTime
+    if (!dateTimeConstraints) {
+      return false
+    }
+
+    const minDate = dateTimeConstraints.min
+      ? getDateFromDateTime(dateTimeConstraints.min)
+      : null
+    const maxDate = dateTimeConstraints.max
+      ? getDateFromDateTime(dateTimeConstraints.max)
+      : null
+
+    if (minDate && date < minDate) {
+      return true
+    }
+
+    if (maxDate && date > maxDate) {
+      return true
+    }
+
+    return false
+  }
+
+  /** Returns true when time is incompatible with datetime min/max for the selected date. */
+  const isTimeDisabledByDateTimeBounds = (time: LocalTime): boolean => {
+    const dateTimeConstraints = constraints.dateTime
+    if (!dateTimeConstraints) {
+      return false
+    }
+
+    const currentValue = getCurrentValue()
+    const selectedDate = currentValue ? getDateFromDateTime(currentValue) : null
+    if (!selectedDate) {
+      return false
+    }
+
+    const minSplit = dateTimeConstraints.min
+      ? splitLocalDateTime(dateTimeConstraints.min)
+      : null
+    const maxSplit = dateTimeConstraints.max
+      ? splitLocalDateTime(dateTimeConstraints.max)
+      : null
+
+    if (minSplit && selectedDate < minSplit.date) {
+      return true
+    }
+
+    if (maxSplit && selectedDate > maxSplit.date) {
+      return true
+    }
+
+    if (minSplit && selectedDate === minSplit.date && time < minSplit.time) {
+      return true
+    }
+
+    if (maxSplit && selectedDate === maxSplit.date && time > maxSplit.time) {
+      return true
+    }
+
+    return false
+  }
+
+  /** Computes day metadata from current selection, constraints and visible month. */
+  const getDayMetaInternal = (date: CalendarDate): DayMeta => {
+    const currentValue = getCurrentValue()
+    const selectedDate = currentValue ? getDateFromDateTime(currentValue) : null
+    const currentMonthKey = getCurrentVisibleMonth().slice(0, 7)
+    const dayMonthKey = date.slice(0, 7)
+    const today = getToday()
+
+    return {
+      isSelectedDate: selectedDate === date,
+      isDisabledDate:
+        !isSelectableDate(date, constraints) || isDateDisabledByDateTimeBounds(date),
+      isToday: today === date,
+      isCurrentMonth: currentMonthKey === dayMonthKey
+    }
+  }
+
+  /** Computes time metadata from current selection and constraints. */
+  const getTimeMetaInternal = (time: LocalTime): TimeMeta => {
+    const currentValue = getCurrentValue()
+    const selectedTime = currentValue ? getTimeFromDateTime(currentValue) : getCurrentTime()
+
+    return {
+      isSelectedTime: selectedTime === time,
+      isDisabledTime:
+        !isSelectableTime(time, constraints) || isTimeDisabledByDateTimeBounds(time)
+    }
+  }
+
+  /** Computes datetime metadata from current selection and constraints. */
+  const getDateTimeMetaInternal = (dateTime: LocalDateTime): DateTimeMeta => {
+    const currentValue = getCurrentValue()
+
+    return {
+      isSelectedDateTime: currentValue === dateTime,
+      isDisabledDateTime: !isSelectableDateTime(dateTime, constraints)
+    }
+  }
+
+  /** Computes the current state snapshot from controlled/uncontrolled values. */
+  const readState = (): DateTimePickerState => {
+    const value = getCurrentValue()
+    const split = value ? splitLocalDateTime(value) : null
+    const standaloneTime = getCurrentTime()
+
+    return {
+      value,
+      selectedDate: split ? split.date : null,
+      selectedTime: split ? split.time : standaloneTime,
+      visibleMonth: getCurrentVisibleMonth(),
+      focusedDate
+    }
+  }
+
   /** Applies datetime updates while respecting controlled/uncontrolled semantics. */
   const applyValue = (next: LocalDateTime | null): void => {
     const normalized = normalizeDateTimeCandidate(next, constraints)
@@ -206,19 +369,30 @@ export const createDateTimePicker = (
   }
 
   return {
-    getState: () => {
-      const value = getCurrentValue()
-      const split = value ? splitLocalDateTime(value) : null
-      const standaloneTime = getCurrentTime()
+    getState: () => readState(),
 
-      return {
-        value,
-        selectedDate: split ? split.date : null,
-        selectedTime: split ? split.time : standaloneTime,
-        visibleMonth: getCurrentVisibleMonth(),
-        focusedDate
-      }
+    getCalendarGrid: () => {
+      const state = readState()
+      const dates = getCalendarDateGrid(state.visibleMonth, weekStartsOn)
+
+      return dates.map((date) => {
+        const dayMeta = getDayMetaInternal(date)
+
+        return {
+          date,
+          isCurrentMonth: dayMeta.isCurrentMonth,
+          isSelected: dayMeta.isSelectedDate,
+          isDisabled: dayMeta.isDisabledDate,
+          isToday: dayMeta.isToday
+        }
+      })
     },
+
+    getDayMeta: (date) => getDayMetaInternal(date),
+
+    getTimeMeta: (time) => getTimeMetaInternal(time),
+
+    getDateTimeMeta: (dateTime) => getDateTimeMetaInternal(dateTime),
 
     setValue: (next) => {
       applyValue(next)

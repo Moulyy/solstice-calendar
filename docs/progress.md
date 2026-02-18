@@ -9,7 +9,8 @@
 | Etape 2 - Maths calendrier | DONE | Fonctions de maths calendrier implementees avec grille fixe de 42 dates | N/A |
 | Etape 3 - Contraintes | DONE | Contraintes date/time/datetime implementees avec clamp et selectability | N/A |
 | Etape 4 - State core + reducer | DONE | Instance core createDateTimePicker avec actions et modes controlled/uncontrolled | N/A |
-| Etape 5 - Selectors | TODO | Non commencee | N/A |
+| Etape 5 - Selectors | DONE | Selectors et metas jour/heure/datetime implementes avec today injectable | N/A |
+| Etape 6 - Prop getters headless | TODO | Non commencee | N/A |
 
 ## Journal
 
@@ -152,3 +153,25 @@
   - En mode controlled, les callbacks sont appeles sans mutation interne
   - Valeurs par defaut deterministes sans dependance systeme:
     `visibleMonth=1970-01-01`, `time=00:00` quand necessaire
+
+### 2026-02-18 20:35 - Etape 5
+
+- Fichiers crees:
+  - `tests/date-time-picker-selectors.spec.ts`
+- Fichiers modifies:
+  - `src/date-time-picker.ts`
+  - `docs/progress.md`
+- Dependances ajoutees:
+  - Aucune
+- Scripts ajoutes:
+  - Aucun
+- Tests ajoutes:
+  - `tests/date-time-picker-selectors.spec.ts` (3 tests selectors + metas)
+- Verification:
+  - `pnpm lint`: OK
+  - `pnpm test`: OK (44 tests passes)
+  - `pnpm build`: OK
+- Decisions:
+  - `nowDate` injectable ajoute dans options pour calcul deterministic de `isToday`
+  - `getCalendarGrid` instance retourne des `CalendarCellMeta` (niveau selector)
+  - Meta date/time rendues coherentes avec min/max datetime (bornes par jour/heure)
