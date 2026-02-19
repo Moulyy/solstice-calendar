@@ -1,6 +1,7 @@
 # solstice-calendar
 
 [![CI](https://github.com/Moulyy/solstice-calendar/actions/workflows/ci.yml/badge.svg?branch=master&event=push)](https://github.com/Moulyy/solstice-calendar/actions/workflows/ci.yml)
+[![Docs](https://github.com/Moulyy/solstice-calendar/actions/workflows/docs-pages.yml/badge.svg?branch=master&event=push)](https://github.com/Moulyy/solstice-calendar/actions/workflows/docs-pages.yml)
 
 Headless, framework-agnostic calendar/date-time core.
 
