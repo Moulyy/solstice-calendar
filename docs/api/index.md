@@ -1,9 +1,5 @@
 # API Reference
 
-## When should I use this?
-
-Use this section when you already understand the concepts and need precise API lookup.
-
 ## API domains
 
 - [Date and Time Values](/api/date-time-values)

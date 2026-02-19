@@ -1,9 +1,5 @@
 # Constraints API
 
-## When should I use this?
-
-Use these helpers to validate, clamp, and test selectability for dates, times, and datetimes.
-
 ## Interfaces
 
 - `DateConstraints`

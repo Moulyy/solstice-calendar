@@ -1,9 +1,5 @@
 # Calendar Math API
 
-## When should I use this?
-
-Use calendar math helpers for month navigation, day offsets, week alignment, and month grid generation.
-
 ## Functions
 
 ### `getMonthStart(date): CalendarDate`

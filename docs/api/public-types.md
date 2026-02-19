@@ -1,9 +1,5 @@
 # Public Types
 
-## When should I use this?
-
-Use this page when you need strong typing for integrations.
-
 ## Date/time and constraints types
 
 - `CalendarDate`, `LocalTime`, `LocalDateTime`
@@ -35,4 +31,4 @@ Use this page when you need strong typing for integrations.
 
 ## Next step
 
-If you need integration help, go to [Troubleshooting](/troubleshooting/common-pitfalls).
+If you need integration help, go to [Troubleshooting](/troubleshooting/faq).

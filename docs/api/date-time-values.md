@@ -1,9 +1,5 @@
 # Date and Time Values API
 
-## When should I use this?
-
-Use these helpers to parse, format, split, and combine canonical value strings.
-
 ## Types
 
 - `CalendarDate`

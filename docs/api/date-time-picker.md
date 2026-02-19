@@ -1,9 +1,5 @@
 # DateTimePicker API
 
-## When should I use this?
-
-Use this API when building custom date/time UI from a headless state engine.
-
 ## Factory
 
 ### `createDateTimePicker(options?): DateTimePickerInstance`

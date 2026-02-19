@@ -1,41 +1,81 @@
 # Formatter
 
-## When should I use this?
+## Mental model
 
-Use a formatter when you need custom display labels or parsing rules.
+The formatter is a contract between user input and canonical picker values:
 
-## Formatter contract
+- `format*` methods define what users see
+- `parse*` methods define what users are allowed to enter
+- `getMonthLabel` and `getWeekdayLabels` define calendar naming
 
-Your formatter can customize:
+A good formatter is strict enough to protect data quality and explicit enough to avoid ambiguous parsing.
 
-- Date formatting/parsing
-- Time formatting/parsing
-- DateTime formatting/parsing
-- Month label
-- Weekday labels
-
-## Example
+## Canonical pattern
 
 ```ts
-const formatter = {
+import {
+  createDateTimePicker,
+  parseCalendarDate,
+  parseLocalDateTime,
+  parseLocalTime,
+  type DateTimeFormatter
+} from "solstice-calendar"
+
+const formatter: DateTimeFormatter = {
   formatDate: (date) => `DATE:${date}`,
-  parseDate: (text) => text.startsWith("DATE:") ? text.slice(5) : null,
+  parseDate: (input) => {
+    if (!input.startsWith("DATE:")) return null
+    return parseCalendarDate(input.slice(5))
+  },
+
   formatTime: (time) => `TIME:${time}`,
-  parseTime: (text) => text.startsWith("TIME:") ? text.slice(5) : null,
-  formatDateTime: (dt) => `DT:${dt}`,
-  parseDateTime: (text) => text.startsWith("DT:") ? text.slice(3) : null,
-  getMonthLabel: (visibleMonth) => `Month ${visibleMonth}`,
-  getWeekdayLabels: () => ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  parseTime: (input) => {
+    if (!input.startsWith("TIME:")) return null
+    return parseLocalTime(input.slice(5))
+  },
+
+  formatDateTime: (dateTime) => `DT:${dateTime}`,
+  parseDateTime: (input) => {
+    if (!input.startsWith("DT:")) return null
+    return parseLocalDateTime(input.slice(3))
+  },
+
+  getMonthLabel: (visibleMonth) => `Month ${visibleMonth.slice(0, 7)}`,
+  getWeekdayLabels: (weekStartsOn) => {
+    const base = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    return base.slice(weekStartsOn).concat(base.slice(0, weekStartsOn))
+  }
 }
 
 const picker = createDateTimePicker({ formatter })
 ```
 
+## Common failure case
+
+```ts
+// Anti-pattern: permissive parser that accepts ambiguous text
+const formatter = {
+  parseDate: (input: string) => input.replaceAll("/", "-") as never
+  // ...other methods omitted
+}
+```
+
+Why this fails: permissive parsing can accept non-canonical or ambiguous text, creating unexpected commits.
+
+Correct approach: parsing methods should return canonical values only, otherwise `null`.
+
 ## Edge cases
 
-- Parsing functions must return `null` for invalid input
-- If your parsing is permissive, user input behavior changes accordingly
+- Parse methods must return `null` for invalid text; never throw for normal user typos.
+- `getWeekdayLabels` should respect `weekStartsOn` ordering to avoid UI mismatch.
+- Formatter strictness directly affects input draft/commit behavior.
+
+## Implementation checklist
+
+- Implement all formatter methods (no partial contract).
+- Validate parsed values with canonical parse helpers.
+- Keep formatting and parsing symmetrical for predictable round-trips.
 
 ## Next step
 
-Continue with [Guides](/guides/navigation-focus).
+Continue with [API Reference](/api/).

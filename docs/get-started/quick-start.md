@@ -20,7 +20,6 @@ const picker = createDateTimePicker({
   defaultValue: null,
   defaultVisibleMonth: "2024-01-01",
   defaultTime: null,
-  stepMinutes: 30,
   onValueChange: (value) => {
     console.log("Selected value:", value)
   }
@@ -35,7 +34,7 @@ At this point, the engine manages:
 - Date/time synchronization
 - Constraint enforcement
 
-## Render the Calendar grid
+## Render the Calendar Grid
 
 Generate the 6×7 calendar matrix:
 
@@ -45,7 +44,7 @@ const grid = picker.getCalendarGrid()
 
 Render it however you like: 
 
-## Exemple in Vanilla JS
+## Example in Vanilla JS
 
 ```ts
 function renderCalendar() {
@@ -81,54 +80,3 @@ function renderCalendar() {
   })
 }
 ```
-
-## Example in Vue.JS
-
-```vue
-<script setup lang="ts">
-import { computed, ref } from "vue"
-import { createDateTimePicker } from "solstice-calendar"
-
-const tick = ref(0)
-
-const picker = createDateTimePicker({
-  defaultValue: null,
-  defaultVisibleMonth: "2024-05-01",
-  onValueChange: () => tick.value++,
-})
-
-const grid = computed(() => {
-  tick.value
-  return picker.getCalendarGrid()
-})
-
-function dayProps(date: string) {
-  return picker.getDayProps(date)
-}
-</script>
-
-<template>
-  <div
-    style="display:grid;grid-template-columns:repeat(7,36px);gap:6px"
-  >
-    <button
-      v-for="cell in grid"
-      :key="cell.date"
-      :disabled="cell.isDisabled || !cell.isCurrentMonth"
-      :tabindex="dayProps(cell.date).tabIndex"
-      :aria-selected="dayProps(cell.date)['aria-selected']"
-      :aria-disabled="cell.isDisabled || !cell.isCurrentMonth"
-      :style="{ opacity: cell.isCurrentMonth ? 1 : 0.4 }"
-      @click="dayProps(cell.date).onPress()"
-      @keydown="(e) => dayProps(cell.date).onKeyDown?.(e.key)"
-    >
-      {{ cell.date.slice(-2) }}
-    </button>
-  </div>
-</template>
-
-```
-
-## Next step
-
-Continue with [Build Your First Picker](/first-picker/).

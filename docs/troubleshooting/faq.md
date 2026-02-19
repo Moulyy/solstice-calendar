@@ -1,9 +1,5 @@
 # FAQ
 
-## When should I use this?
-
-Use this page for quick answers before digging into detailed guides.
-
 ## Does this library handle timezone conversion?
 
 No. Values are timezone-free by design.
@@ -26,9 +22,9 @@ The grid is always a fixed 6x7 layout for stable rendering.
 
 ## What is the fastest path to production integration?
 
-1. Follow Start Here
-2. Complete Build Your First Picker
-3. Add constraints recipe
+1. Follow Get Started
+2. Complete Core Concepts
+3. Apply constraint rules from Core Concepts
 4. Use API reference as lookup
 
 ## Edge cases
@@ -38,4 +34,4 @@ The grid is always a fixed 6x7 layout for stable rendering.
 
 ## Next step
 
-Return to [Start Here](/start-here/) or jump to [API Reference](/api/).
+Return to [Get Started](/get-started/introduction) or jump to [API Reference](/api/).

@@ -2,19 +2,6 @@
 
 Headless, framework-agnostic calendar and date-time core.
 
-## When should I use this?
-
-Use this page when you want to choose the best starting point for your integration.
-
-Use this documentation as a guided path:
-
-1. Start with [Start Here](/start-here/)
-2. Build your first implementation in [Build Your First Picker](/first-picker/)
-3. Learn expected behavior in [Core Concepts](/core-concepts/value-model)
-4. Solve integration details in [Guides](/guides/navigation-focus)
-5. Reuse complete setups in [Recipes](/recipes/date-only-picker)
-6. Use [API Reference](/api/) as lookup
-
 ## Who this is for
 
 This documentation is for engineers who want full UI control while relying on a deterministic date-time core.
@@ -35,4 +22,4 @@ This documentation is for engineers who want full UI control while relying on a 
 
 ## Next step
 
-Go to [Start Here](/start-here/).
+Go to [Get Started](/get-started/introduction).

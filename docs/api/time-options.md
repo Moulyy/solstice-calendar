@@ -1,9 +1,5 @@
 # Time Options API
 
-## When should I use this?
-
-Use this API to generate deterministic time lists and step rounding behavior.
-
 ## Interface
 
 ### `GetTimeOptionsArgs`

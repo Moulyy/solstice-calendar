@@ -3,7 +3,7 @@
 Solstice Calendar is distributed as a lightweight, framework-agnostic package.
 It has no UI dependencies and no DOM assumptions, making it safe to use in both client and server environments.
 
-##  Package Manager
+## Package Manager
 
 Install the package using your preferred package manager:
 
