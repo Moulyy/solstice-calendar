@@ -3,6 +3,8 @@
 [![CI](https://github.com/Moulyy/solstice-calendar/actions/workflows/ci.yml/badge.svg?branch=master&event=push)](https://github.com/Moulyy/solstice-calendar/actions/workflows/ci.yml)
 [![Docs](https://github.com/Moulyy/solstice-calendar/actions/workflows/docs-pages.yml/badge.svg?branch=master&event=push)](https://github.com/Moulyy/solstice-calendar/actions/workflows/docs-pages.yml)
 
+Documentation site: [moulyy.github.io/solstice-calendar](https://moulyy.github.io/solstice-calendar/)
+
 Headless, framework-agnostic calendar/date-time core.
 
 ## Installation
