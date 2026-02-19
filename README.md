@@ -46,6 +46,26 @@ picker.setTime("11:45")
 console.log(picker.getState().value) // 2024-05-20T11:45
 ```
 
+## Capabilities
+
+What you can build today with `solstice-calendar`:
+
+- Date picker (date-only)
+- Time picker (time-only)
+- Date-time picker (combined date + time)
+- Month calendar view with keyboard-friendly navigation
+- Fully custom headless picker UIs in any framework or vanilla JS
+- Two-picker start/end flows (range pattern) with controlled synchronization
+
+Core feature set:
+
+- Timezone-free canonical values (`CalendarDate`, `LocalTime`, `LocalDateTime`)
+- Controlled and uncontrolled state channels (`value`, `visibleMonth`, `time`)
+- Constraint composition (min/max + disabled predicates) at date/time/datetime levels
+- Input policy with invalid draft support, `aria-invalid`, blur revert, and clear-to-null
+- Custom formatter contract for display/parsing and calendar labels
+- Deterministic helpers for calendar math and stepped time options
+
 ## Constraints
 
 You can combine date, time, datetime bounds and custom disabled predicates.
